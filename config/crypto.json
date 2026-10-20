@@ -1,0 +1,13 @@
+{
+  "market": "crypto",
+  "symbol": "BTCUSDT",
+  "interval": "1h",
+  "ema_fast": 12,
+  "ema_slow": 26,
+  "rsi_period": 14,
+  "rsi_buy_max": 70,
+  "rsi_sell_min": 30,
+  "risk_per_trade_pct": 1.0,
+  "stop_loss_pct": 2.0,
+  "max_total_exposure_pct": 30.0
+}
