@@ -50,6 +50,28 @@ def lire_soldes():
     }
 
 
+def prix_actuel(symbole):
+    r = requests.get(
+        f"{URL_TESTNET}/v3/ticker/price", params={"symbol": symbole}, timeout=15
+    )
+    r.raise_for_status()
+    return float(r.json()["price"])
+
+
+def acheter_au_marche(symbole, montant_usdt):
+    """Achète pour `montant_usdt` USDT au prix du marché (Testnet uniquement)."""
+    return requete_signee(
+        "POST",
+        "/v3/order",
+        {
+            "symbol": symbole,
+            "side": "BUY",
+            "type": "MARKET",
+            "quoteOrderQty": montant_usdt,
+        },
+    )
+
+
 if __name__ == "__main__":
     if not API_KEY or not API_SECRET:
         raise SystemExit("Clés introuvables : vérifie le fichier .env")
