@@ -131,6 +131,26 @@ def annuler_ordre(symbole, order_id):
 def annuler_tous_les_ordres(symbole):
     return requete_signee("DELETE", "/v3/openOrders", {"symbol": symbole})
 
+def etat_ordre(symbole, order_id):
+    """Retourne le statut d'un ordre : NEW, FILLED, CANCELED..."""
+    return requete_signee(
+        "GET", "/v3/order", {"symbol": symbole, "orderId": order_id}
+    )["status"]
+
+def vendre_quantite(symbole, quantite):
+    """Vente au marché d'une quantité (Testnet)."""
+    pas_qte, _ = regles_symbole(symbole)
+    return requete_signee(
+        "POST",
+        "/v3/order",
+        {
+            "symbol": symbole,
+            "side": "SELL",
+            "type": "MARKET",
+            "quantity": arrondir(quantite, pas_qte),
+        },
+    )
+
 if __name__ == "__main__":
     if not API_KEY or not API_SECRET:
         raise SystemExit("Clés introuvables : vérifie le fichier .env")
