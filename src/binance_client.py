@@ -3,6 +3,7 @@ import hmac
 import os
 import time
 from urllib.parse import urlencode
+from decimal import Decimal, ROUND_DOWN
 
 import requests
 from dotenv import load_dotenv
@@ -71,6 +72,64 @@ def acheter_au_marche(symbole, montant_usdt):
         },
     )
 
+def regles_symbole(symbole):
+    """Lit sur Binance le pas de quantité et le pas de prix de la paire."""
+    r = requests.get(
+        f"{URL_TESTNET}/v3/exchangeInfo", params={"symbol": symbole}, timeout=15
+    )
+    r.raise_for_status()
+    filtres = {f["filterType"]: f for f in r.json()["symbols"][0]["filters"]}
+    return filtres["LOT_SIZE"]["stepSize"], filtres["PRICE_FILTER"]["tickSize"]
+
+
+def arrondir(valeur, pas):
+    """Arrondit vers le bas à un multiple de `pas` et renvoie un texte."""
+    pas_d = Decimal(str(pas))
+    n = (Decimal(str(valeur)) / pas_d).to_integral_value(rounding=ROUND_DOWN)
+    return format(n * pas_d, "f")
+
+
+def acheter_quantite(symbole, quantite):
+    """Achat au marché d'une quantité de BTC (Testnet)."""
+    pas_qte, _ = regles_symbole(symbole)
+    return requete_signee(
+        "POST",
+        "/v3/order",
+        {
+            "symbol": symbole,
+            "side": "BUY",
+            "type": "MARKET",
+            "quantity": arrondir(quantite, pas_qte),
+        },
+    )
+
+
+def poser_stop_loss(symbole, quantite, prix_stop, ecart_limite_pct=0.5):
+    """Ordre de vente déclenché si le prix tombe à `prix_stop`."""
+    pas_qte, pas_prix = regles_symbole(symbole)
+    prix_limite = prix_stop * (1 - ecart_limite_pct / 100)
+    return requete_signee(
+        "POST",
+        "/v3/order",
+        {
+            "symbol": symbole,
+            "side": "SELL",
+            "type": "STOP_LOSS_LIMIT",
+            "timeInForce": "GTC",
+            "quantity": arrondir(quantite, pas_qte),
+            "stopPrice": arrondir(prix_stop, pas_prix),
+            "price": arrondir(prix_limite, pas_prix),
+        },
+    )
+
+
+def annuler_ordre(symbole, order_id):
+    return requete_signee(
+        "DELETE", "/v3/order", {"symbol": symbole, "orderId": order_id}
+    )
+
+def annuler_tous_les_ordres(symbole):
+    return requete_signee("DELETE", "/v3/openOrders", {"symbol": symbole})
 
 if __name__ == "__main__":
     if not API_KEY or not API_SECRET:
