@@ -1,0 +1,33 @@
+name: Bilan quotidien (démo)
+
+on:
+  schedule:
+    - cron: "0 17 * * *"   # tous les jours à 17h UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bilan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installer les bibliothèques
+        run: pip install -r requirements.txt
+
+      - name: Envoyer le bilan
+        env:
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
+          GMAIL_ADRESSE: ${{ secrets.GMAIL_ADRESSE }}
+          GMAIL_MOT_DE_PASSE: ${{ secrets.GMAIL_MOT_DE_PASSE }}
+          EMAIL_DESTINATAIRE: ${{ secrets.EMAIL_DESTINATAIRE }}
+        run: python src/bilan.py

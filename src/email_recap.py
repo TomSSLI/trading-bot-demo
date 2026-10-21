@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def envoyer_recap(texte):
+def envoyer_recap(texte, sujet="Récap bot trading (démo)"):
     adresse = os.getenv("GMAIL_ADRESSE")
     mot_de_passe = os.getenv("GMAIL_MOT_DE_PASSE")
     destinataire = os.getenv("EMAIL_DESTINATAIRE") or adresse
@@ -16,7 +16,7 @@ def envoyer_recap(texte):
         raise SystemExit("Identifiants Gmail introuvables : vérifie le fichier .env")
 
     message = EmailMessage()
-    message["Subject"] = f"Récap bot trading (démo) - {datetime.now():%d/%m/%Y %H:%M}"
+    message["Subject"] = f"{sujet} - {datetime.now():%d/%m/%Y %H:%M}"
     message["From"] = adresse
     message["To"] = destinataire
     message.set_content(texte)
