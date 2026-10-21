@@ -1,6 +1,7 @@
 import json
 import requests
 import pandas as pd
+from reseau import get_avec_reessai
 
 URL_PRIX = "https://data-api.binance.vision/api/v3/klines"
 
@@ -12,7 +13,7 @@ def charger_config(chemin="config/crypto.json"):
 
 def recuperer_bougies(symbole, intervalle, nombre=200):
     params = {"symbol": symbole, "interval": intervalle, "limit": nombre}
-    reponse = requests.get(URL_PRIX, params=params, timeout=15)
+    reponse = get_avec_reessai(URL_PRIX, params=params, timeout=15)
     reponse.raise_for_status()
     colonnes = [
         "open_time", "open", "high", "low", "close", "volume",

@@ -56,4 +56,16 @@ def executer():
 
 
 if __name__ == "__main__":
-    print(executer())
+    from email_recap import envoyer_recap
+
+    try:
+        resultat = executer()
+        print(resultat)
+        # E-mail uniquement quand le bot a agi (achat, vente, stop déclenché)
+        if "ACHAT " in resultat or "VENTE à" in resultat or "Stop loss déclenché" in resultat:
+            envoyer_recap(resultat)
+    except Exception as erreur:
+        message = f"ERREUR du bot : {erreur}"
+        print(message)
+        envoyer_recap(message)
+        raise
