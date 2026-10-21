@@ -1,0 +1,45 @@
+name: Bot crypto (démo)
+
+on:
+  schedule:
+    - cron: "5 * * * *"   # toutes les heures, à HH:05
+  workflow_dispatch:       # permet aussi un lancement manuel
+
+concurrency:
+  group: bot-crypto
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  executer-bot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Installer les bibliothèques
+        run: pip install -r requirements.txt
+
+      - name: Lancer le bot
+        env:
+          BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
+          BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
+          GMAIL_ADRESSE: ${{ secrets.GMAIL_ADRESSE }}
+          GMAIL_MOT_DE_PASSE: ${{ secrets.GMAIL_MOT_DE_PASSE }}
+          EMAIL_DESTINATAIRE: ${{ secrets.EMAIL_DESTINATAIRE }}
+        run: python src/bot.py
+
+      - name: Sauvegarder la mémoire du bot
+        if: always()
+        run: |
+          git config user.name "bot-trading"
+          git config user.email "bot-trading@users.noreply.github.com"
+          git add etat.json
+          git diff --staged --quiet || (git commit -m "Mise à jour de l'état du bot" && git push)
