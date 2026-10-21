@@ -1,6 +1,7 @@
 {
   "market": "crypto",
-  "symbol": "BTCUSDT",
+  "symbol": "BTC/USD",
+  "symbol_donnees": "BTCUSDT",
   "interval": "1h",
   "ema_fast": 12,
   "ema_slow": 26,

@@ -1,6 +1,7 @@
 import json
-import requests
+
 import pandas as pd
+
 from reseau import get_avec_reessai
 
 URL_PRIX = "https://data-api.binance.vision/api/v3/klines"
@@ -14,7 +15,6 @@ def charger_config(chemin="config/crypto.json"):
 def recuperer_bougies(symbole, intervalle, nombre=200):
     params = {"symbol": symbole, "interval": intervalle, "limit": nombre}
     reponse = get_avec_reessai(URL_PRIX, params=params, timeout=15)
-    reponse.raise_for_status()
     colonnes = [
         "open_time", "open", "high", "low", "close", "volume",
         "close_time", "quote_volume", "trades",
@@ -42,7 +42,7 @@ def calculer_rsi(prix, periode=14):
 
 def analyser():
     cfg = charger_config()
-    df = recuperer_bougies(cfg["symbol"], cfg["interval"])
+    df = recuperer_bougies(cfg["symbol_donnees"], cfg["interval"])
     df["ema_rapide"] = calculer_ema(df["close"], cfg["ema_fast"])
     df["ema_lente"] = calculer_ema(df["close"], cfg["ema_slow"])
     df["rsi"] = calculer_rsi(df["close"], cfg["rsi_period"])

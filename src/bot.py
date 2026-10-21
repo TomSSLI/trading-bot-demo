@@ -1,10 +1,12 @@
+import time
+
 from analyse import analyser, charger_config
 from strategie import decider
 from risque import calculer_quantite, prix_stop_loss, peut_acheter
 from etat import position_ouverte, ouvrir_position, fermer_position
-from binance_client import (
-    lire_soldes, acheter_quantite, poser_stop_loss, annuler_ordre,
-    etat_ordre, vendre_quantite,
+from alpaca_client import (
+    lire_liquidites, quantite_detenue, acheter_quantite, poser_stop_loss,
+    annuler_ordre, etat_ordre, vendre_quantite,
 )
 
 
@@ -18,31 +20,39 @@ def executer():
     compte_rendu = [f"Marché {symbole} | prix {prix:.2f} | signal {signal}"]
 
     if position is None:
-        capital = lire_soldes().get("USDT", 0.0)
+        capital = lire_liquidites()
         quantite = calculer_quantite(capital, prix, cfg)
         if signal == "ACHAT" and peut_acheter(False, quantite):
             achat = acheter_quantite(symbole, quantite)
-            qte = float(achat["executedQty"])
-            entree = float(achat["cummulativeQuoteQty"]) / qte
+            if achat["status"] != "filled":
+                raise RuntimeError(f"Achat non exécuté : statut {achat['status']}")
+            entree = float(achat["filled_avg_price"])
+            time.sleep(2)
+            qte = quantite_detenue(symbole)  # après frais
             stop = prix_stop_loss(entree, cfg)
             ordre_stop = poser_stop_loss(symbole, qte, stop)
-            ouvrir_position(symbole, qte, entree, stop, ordre_stop["orderId"])
+            ouvrir_position(symbole, qte, entree, stop, ordre_stop["id"])
             compte_rendu.append(
                 f"ACHAT {qte} BTC à {entree:.2f} | stop loss {stop}"
             )
         else:
             compte_rendu.append("Aucune action (hors position).")
     else:
-        statut = etat_ordre(symbole, position["id_stop"])
-        if statut == "FILLED":
+        statut = etat_ordre(position["id_stop"])
+        if statut == "filled":
             fermer_position()
             compte_rendu.append(
                 f"Stop loss déclenché à {position['prix_stop']} : position fermée."
             )
+        elif statut in ("canceled", "expired", "rejected"):
+            raise RuntimeError(
+                f"Le stop loss est en statut {statut} : position sans protection, à vérifier."
+            )
         elif signal == "VENTE":
-            annuler_ordre(symbole, position["id_stop"])
-            vente = vendre_quantite(symbole, position["quantite"])
-            sortie = float(vente["cummulativeQuoteQty"]) / float(vente["executedQty"])
+            annuler_ordre(position["id_stop"])
+            time.sleep(2)
+            vente = vendre_quantite(symbole, quantite_detenue(symbole))
+            sortie = float(vente["filled_avg_price"])
             fermer_position()
             compte_rendu.append(
                 f"VENTE à {sortie:.2f} (entrée {position['prix_entree']:.2f})."
