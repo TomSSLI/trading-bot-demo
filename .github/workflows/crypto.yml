@@ -29,8 +29,8 @@ jobs:
 
       - name: Lancer le bot
         env:
-          BINANCE_API_KEY: ${{ secrets.BINANCE_API_KEY }}
-          BINANCE_API_SECRET: ${{ secrets.BINANCE_API_SECRET }}
+          ALPACA_API_KEY: ${{ secrets.ALPACA_API_KEY }}
+          ALPACA_API_SECRET: ${{ secrets.ALPACA_API_SECRET }}
           GMAIL_ADRESSE: ${{ secrets.GMAIL_ADRESSE }}
           GMAIL_MOT_DE_PASSE: ${{ secrets.GMAIL_MOT_DE_PASSE }}
           EMAIL_DESTINATAIRE: ${{ secrets.EMAIL_DESTINATAIRE }}
