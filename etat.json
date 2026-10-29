@@ -1,9 +1,3 @@
 {
-  "position": {
-    "symbole": "BTC/USD",
-    "quantite": 0.363747986,
-    "prix_entree": 81212.305678289,
-    "prix_stop": 79588.06,
-    "id_stop": "832b8211-25b3-47d1-b367-e2a9300a438e"
-  }
+  "position": null
 }
